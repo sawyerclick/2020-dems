@@ -3,7 +3,7 @@
 
 <head>
 
-	<title>Your Map</title>
+	<title>Dem. Candidates | Sawyer Click</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta property="og:image" content="https://sawyerclick.github.io/headers/2020-dems.gif">
@@ -17,24 +17,16 @@
 
 	<style>
 		::-webkit-scrollbar {
-			width: 0px;
-			/* remove scrollbar space */
 			background: transparent;
-			/* optional: just make scrollbar invisible */
 		}
 
+		body {
+			margin: 0;
+		}
 		.info {
-			padding: 6px 8px;
-			font: 14px/16px Arial, Helvetica, sans-serif;
+			font: 14px Arial, Helvetica, sans-serif;
+			font-weight: 400;
 			background: white;
-			background: rgba(255, 255, 255, 0.8);
-			box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-			border-radius: 5px;
-		}
-
-		.info h4 {
-			margin: 0 0 5px;
-			color: #777;
 		}
 
 		.legend {
@@ -47,12 +39,7 @@
 			width: 18px;
 			height: 18px;
 			float: left;
-			margin-right: 8px;
 			opacity: 0.7;
-		}
-
-		body {
-			display: flex;
 		}
 
 		#select-menu {
@@ -61,37 +48,65 @@
 			top: 10px;
 			z-index: 10;
 		}
-#headPlace {
-			position: absolute;
-			right: 0px;
-			top: 0px;
-			z-index: 10;
-
-		padding: 10px;
-		width: 200px;
-			background-color: #DDDDDD;
-
-		}
 		#map {
-			flex: 2;
-			height: calc(100vh - 30px);
-			width: 75%;
+			height: 100vh;
+			width: 100vw;
 		}
-		#articlePlace {
-			width: 25%;
-			flex: 1;
-			height: calc(100vh - 30px);
-			overflow: scroll;
-			margin: 15px;
-			padding-top:2%;
+		#textHolder {
+			position: absolute;
+			width: 33%;
+			background-color: rgba(245, 245, 245, .4);
+			z-index: 1;
+			bottom: 0;
+			border-radius: 10px;
 		}
-		#img {
-			width: 25%;
-			flex: 1;
+		#headPlace {
+			position: absolute;
+			z-index: 1;
+			font: 2.5rem Arial, Helvetica, sans-serif;
+			padding-left: 2%;
+			bottom: 75px;
+			width: 350px;
+			height: 100px;
 		}
-		#headline {
-			flex: 2;
-			width: 75%;
+		#note {
+			position: absolute;
+			z-index: 1;
+			font: 1rem Arial, Helvetica, sans-serif;
+			padding-left: 2%;
+			bottom: 30px;
+			width: 400px;
+			height: 50px;
+		}
+
+		@media (max-width: 1435px) {
+			#textHolder {
+				background: rgba(245, 245, 245, 0.9);
+				width: 420px;
+				z-index: 1;
+				height: 175px;
+				bottom: 0;
+			}
+		}
+
+		@media (max-width: 750px) {
+			#headPlace {
+				width: 345px;
+				font-size: 32px;
+				text-align: left;
+				bottom: 45px;
+				/* padding: 5px; */
+			}
+			#note {
+				width: 345px;
+				font-size: 14px;
+				text-align: left;
+				bottom: 20px;
+				/* padding: 5px; */
+			}
+			#textHolder {
+				width: 100vw;
+			}
 		}
 		
 
@@ -107,46 +122,41 @@
 				<option value="">All Groups</option>
 			</select>
 		</div>
-		<div id='headPlace'> Rollover to get info</div>
+		<div id='textHolder'>
+			<div id='headPlace'>the 2020 dems' facebook events</div>
+			<div id='note'>Data scraped from Facebook with dates ranging from each candidate's announcement to summer 2019.</div>
+		</div>
 	</div>
 	
-	<div id='articlePlace'><h1 style='font-size:42;padding-top: 35%'>Mapping <i>Some</i> of the</br>2020 Dem. Presidential </br>Candidate's Facebook Events</h1></div>
+	<!-- <div id='articlePlace'><h1 style='font-size:42;padding-top: 35%'>Mapping <i>Some</i> of the</br>2020 Dem. Presidential </br>Candidate's Facebook Events</h1></div> -->
 
 	<script type="text/javascript" src="geo-data.js"></script>
 
 	<script type="text/javascript">
 
-		mapboxgl.accessToken = 'pk.eyJ1Ijoic2F3eWVyY2xpY2siLCJhIjoiY2p4bDlmc3FrMDN0MzN6bXIxZnVqbWJ0MCJ9.ZHH1d5rKkm5UXgpuk_hi3g';
+		mapboxgl.accessToken = 'pk.eyJ1Ijoic2F3eWVyY2xpY2siLCJhIjoiY2s2MDZhdHlnMDRybTNlcGkxbWpzbGt2MCJ9.xyp8JSt0Pofli08LndKkPw';
 
 		var map = new mapboxgl.Map({
-			container: 'map', // HTML container ID
+			container: 'map',
 			style: 'mapbox://styles/mapbox/light-v10', // style URL
-			center: [-95.6500523, 41.850033], // starting position as [lng, lat]
-			zoom: 3.5
+			center: [-95.6500523, 41.850033],
+			zoom: getZoom()
+			
 		});
 		map.addControl(new mapboxgl.NavigationControl(), 'top-left');
-
-// all of this JavaScript manages what's displayed on hover and click
 		var popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false });
 
 		let hoverCurrentId = null
 		var datalayer;
 
-		function updateArticle(e) {
-			let feature = e.features[0]
-			document.getElementById("articlePlace").innerHTML = feature.properties.article
+		function getZoom() {
+			if (window.innerWidth < 750) {
+				return 2
+			} else {
+				return 3.5
+			}
 		}
-		function updateHead(e) {
-			let feature = e.features[0]
-			map.getCanvas().style.cursor = 'pointer';
-			document.getElementById("headPlace").innerHTML = feature.properties.headline
-
-		}
-		function removeHead(e) {
-			document.getElementById("headPlace").innerHTML = "&nbsp;"
-			map.getCanvas().style.cursor = '';
-
-		}
+		
 
 		function startHover(e) {
 			let feature = e.features[0]
@@ -170,14 +180,14 @@
 			map.getCanvas().style.cursor = 'pointer';
 
 			var coordinates = feature.geometry.coordinates.slice();
-			var headline = feature.properties.headline;
+			var tooltip = feature.properties.article;
 
 			while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
 				coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
 			}
 
 			popup.setLngLat(coordinates)
-				.setHTML(`<h4>${headline}</h4>`)
+				.setHTML(`${tooltip}`)
 				.addTo(map);
 		}
 
@@ -200,8 +210,6 @@
 				},
 				paint: {
 					'circle-radius': 4,
-					'circle-stroke-color': 'white',
-					'circle-stroke-width': 1,
 					'circle-color': [
 						'case',
 						['boolean', ['feature-state', 'hover'], false],
@@ -211,41 +219,30 @@
 					'circle-opacity': [
 						'case',
 						['boolean', ['feature-state', 'hover'], false],
-						1,
+						.7,
 						0.5
 					]
 				}
 			});
 			map.on('mouseenter', 'datalayer', function (e) {
 				startHover(e)
-// uncomment this line to get pop-ups
 				drawPopup(e)
-				updateHead(e)
 			});
 
-			// When we move the mouse away from a point, turn off the hovering and popup
 			map.on('mouseleave', 'datalayer', function (e) {
 				stopHover(e)
-// uncomment this line to get pop-ups
 				removePopup(e)
-				removeHead(e)
 			});
 
-			// When we click, update the article (the right-hand side)
-			map.on('click', 'datalayer', function (e) {
-				updateArticle(e)
-			})
-
-// very important!! this automatically centers the map and zooms it
+			// map.on('click', 'datalayer', function (e) {
+			// 	updateArticle(e)
+			// })
 
 			// map.fitBounds(turf.bbox(infoData), { padding: 30, linear: true })
 		})
-
-
 	</script>
+
 	<script>
-	// this part is J query / with some mapbox JavaScript
-	// it changes what is displayed based on the pulldown menu
 		var groupsObj = {};
 
 		$(document).ready(function () {
